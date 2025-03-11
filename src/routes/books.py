@@ -1,17 +1,22 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from ..books import data, schemas
+from ..books import schemas
 from typing import List
 from ..db.main import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from ..books.service import BookService
+from src.auth.dependencies import AccessTokenBearer
+
 
 router = APIRouter()
-
 book_service = BookService()
+access_token_bearer = AccessTokenBearer()
 
 
 @router.get("/", response_model=List[schemas.BookModel])
-async def get_all_books(session: AsyncSession = Depends(get_session)):
+async def get_all_books(
+    session: AsyncSession = Depends(get_session),
+    user_details=Depends(access_token_bearer),
+):
     books = await book_service.get_all_books(session)
     return books
 
