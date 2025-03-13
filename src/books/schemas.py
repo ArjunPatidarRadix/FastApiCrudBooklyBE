@@ -3,6 +3,8 @@ from typing import Optional
 from uuid import UUID
 from datetime import datetime, date
 
+# from src.auth.schemas import UserModel
+
 
 class BookBaseModel(BaseModel):
     title: str
@@ -13,6 +15,7 @@ class BookBaseModel(BaseModel):
     language: str
     created_at: datetime
     updated_at: datetime
+    # user: UserModel
 
 
 class BookModel(BookBaseModel):

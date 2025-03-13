@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from .routes import books, authRoute
 from contextlib import asynccontextmanager
 from src.db.main import init_db
+from fastapi.openapi.utils import get_openapi
 
 
 @asynccontextmanager
@@ -27,8 +28,32 @@ app = FastAPI(
     version=version,
     title="Bookly",
     description="A simple book management system",
-    lifespan=life_span,
+    # lifespan=life_span,
 )
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Bookly API",
+        version=version,
+        description="A simple book management system with authentication",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "OAuth2PasswordBearer": {
+            "type": "oauth2",
+            "flows": {
+                "password": {"tokenUrl": f"/api/{version}/user/login", "scopes": {}}
+            },
+        }
+    }
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
 
 
 @app.get("/")
