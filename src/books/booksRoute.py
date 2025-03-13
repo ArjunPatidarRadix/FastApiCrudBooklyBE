@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from ..books import schemas
+from . import schemas
 from typing import List
 from ..db.main import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
-from ..books.service import BookService
+from .service import BookService
 from src.auth.dependencies import AccessTokenBearer, RoleChecker
 
 
@@ -37,7 +37,7 @@ async def get_user_books_submissions(
 
 
 @router.get(
-    "/{book_uid}", response_model=schemas.BookModel, dependencies=[role_checker]
+    "/{book_uid}", response_model=schemas.BookDetailModel, dependencies=[role_checker]
 )
 async def get_book_by_id(
     book_uid: str,

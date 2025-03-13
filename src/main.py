@@ -5,7 +5,10 @@ Git code: https://github.com/jod35/fastapi-beyond-CRUD/blob/main/src/__init__.py
 """
 
 from fastapi import FastAPI
-from .routes import books, authRoute
+
+from .auth import authRoute
+from .books import booksRoute
+from .reviews import reviewsRoute
 from contextlib import asynccontextmanager
 from src.db.main import init_db
 from fastapi.openapi.utils import get_openapi
@@ -61,5 +64,8 @@ def read_root():
     return {"Hello": "World"}
 
 
-app.include_router(books.router, prefix=f"/api/{version}/books", tags=["books"])
+app.include_router(booksRoute.router, prefix=f"/api/{version}/books", tags=["books"])
 app.include_router(authRoute.router, prefix=f"/api/{version}/user", tags=["users"])
+app.include_router(
+    reviewsRoute.router, prefix=f"/api/{version}/reviews", tags=["reviews"]
+)

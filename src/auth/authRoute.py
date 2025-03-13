@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordRequestForm
-from src.auth.schemas import UserCreateModel, UserLoginModel, UserModel, TokenModel
+from src.auth.schemas import UserCreateModel, UserBooksModel, UserModel, TokenModel
 from src.auth.service import UserService
 from src.db.main import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -153,7 +153,7 @@ async def refresh_token(
     }
 
 
-@router.get("/me", response_model=UserModel)
+@router.get("/me", response_model=UserBooksModel)
 async def get_current_user(
     current_user: dict = Depends(get_current_user), role: bool = Depends(role_checker)
 ):
