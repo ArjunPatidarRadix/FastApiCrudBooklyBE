@@ -3,7 +3,7 @@ from fastapi.security import (
     HTTPAuthorizationCredentials,
     OAuth2PasswordBearer,
 )
-from fastapi import Request, HTTPException, status, Depends
+from fastapi import Request, status, Depends
 from .utils import decode_token
 from .service import UserService
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -14,6 +14,14 @@ from src.db.main import get_session
 from .service import UserService
 from typing import Any, List
 from src.db.models import User
+from src.errors import (
+    InvalidToken,
+    RefreshTokenRequired,
+    AccessTokenRequired,
+    InsufficientPermission,
+    UserNotFound,
+    AccountNotVerified,
+)
 
 userService = UserService()
 
@@ -27,16 +35,12 @@ class AccessTokenBearer:
         session: AsyncSession = Depends(get_session),
     ) -> dict:
         if not token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
-            )
+            raise InvalidToken()
 
         payload = decode_token(token)
 
         if not payload:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired token"
-            )
+            raise InvalidToken()
 
         # Commented because redix serer is not setup
         # if await token_in_blocklist(payload["jti"]):
@@ -49,18 +53,13 @@ class AccessTokenBearer:
         #     )
 
         if payload.get("refresh"):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Refresh token not allowed for this endpoint",
-            )
+            raise AccessTokenRequired()
 
         user_service = UserService()
         user = await user_service.get_user_by_email(payload["user"]["email"], session)
 
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise UserNotFound()
 
         return payload["user"]
 
@@ -85,9 +84,8 @@ class RoleChecker:
         current_user: User = Depends(get_current_user),
         session: AsyncSession = Depends(get_session),
     ) -> Any:
+        if not current_user.is_verified:
+            raise AccountNotVerified()
         if current_user.role not in self.allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to access this resource",
-            )
+            raise InsufficientPermission()
         return True

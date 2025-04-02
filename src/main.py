@@ -12,6 +12,8 @@ from .reviews import reviewsRoute
 from contextlib import asynccontextmanager
 from src.db.main import init_db
 from fastapi.openapi.utils import get_openapi
+from .errors import register_all_errors
+from .middleware import register_middleware
 
 
 @asynccontextmanager
@@ -58,6 +60,10 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
+register_all_errors(app)
+
+register_middleware(app)
+
 
 @app.get("/")
 def read_root():
@@ -69,3 +75,6 @@ app.include_router(authRoute.router, prefix=f"/api/{version}/user", tags=["users
 app.include_router(
     reviewsRoute.router, prefix=f"/api/{version}/reviews", tags=["reviews"]
 )
+
+
+# fastapi dev src/main.py to run the server

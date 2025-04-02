@@ -44,3 +44,16 @@ class TokenModel(BaseModel):
     refresh_token: str = Field(..., description="JWT refresh token")
     token_type: str = Field(..., description="Token type")
     user: dict = Field(..., description="User data")
+
+
+class EmailModel(BaseModel):
+    addresses: List[str] = Field(..., description="Emails")
+
+
+class PasswordResetRequestModel(BaseModel):
+    email: str = Field(..., description="user email")
+
+
+class PasswordResetConfirmModel(BaseModel):
+    new_password: str = Field(..., description="user password")
+    confirm_new_password: str = Field(..., description="confirm password")
