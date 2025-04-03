@@ -29,12 +29,7 @@ async def life_span(app: FastAPI):
 
 version = "v1"
 
-app = FastAPI(
-    version=version,
-    title="Bookly",
-    description="A simple book management system",
-    # lifespan=life_span,
-)
+app = FastAPI()
 
 
 def custom_openapi():
@@ -45,6 +40,16 @@ def custom_openapi():
         version=version,
         description="A simple book management system with authentication",
         routes=app.routes,
+        terms_of_service="http://example.com/terms/",
+        contact={
+            "name": "Arj",
+            "url": "http://example.com/contact/",
+            "email": "contact@example.com",
+        },
+        license_info={
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+        },
     )
     openapi_schema["components"]["securitySchemes"] = {
         "OAuth2PasswordBearer": {

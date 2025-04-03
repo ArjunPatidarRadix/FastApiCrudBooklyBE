@@ -35,7 +35,7 @@ from src.errors import (
 
 from src.mail import create_message, mail
 from src.config import Config
-
+from src.celery_tasks import send_email
 
 router = APIRouter()
 
@@ -57,8 +57,12 @@ async def send_mail(emails: EmailModel):
         html = "<h1>Welcome to Bookly</h1>"
 
         msg = create_message(emails, "Bookly: Welcome!", html)
+        mail.send_message(msg)
 
-        await mail.send_message(msg)
+        # or
+
+        # Below line will work only when there is redis setup in local systmem
+        # send_email.delay(emails, "Bookly: Verify your email", html)
 
         return {"message": "Email sent"}
 
@@ -97,8 +101,10 @@ async def create_user_account(
     """
 
     msg = create_message([email], "Bookly: Verify your email", html_message)
-
     background_tasks.add_task(mail.send_message, msg)
+
+    # Below line will work only when there is redis setup in local systmem
+    # send_email.delay([email], "Bookly: Verify your email", html_message)
 
     return {
         "message": "Account created! Check email to verify your account",
