@@ -92,7 +92,7 @@ async def create_user_account(
 
     urlSafeToken = create_url_safe_token({"email": email})
 
-    link = f"http://{Config.DOMAIN}/api/v1/user/verify/{urlSafeToken}"
+    link = f"{Config.DOMAIN}/api/v1/user/verify/{urlSafeToken}"
 
     html_message = f"""
     <h1>Verify your email</h1>
@@ -101,10 +101,10 @@ async def create_user_account(
     """
 
     msg = create_message([email], "Bookly: Verify your email", html_message)
-    background_tasks.add_task(mail.send_message, msg)
+    # background_tasks.add_task(mail.send_message, msg)
 
-    # Below line will work only when there is redis setup in local systmem
-    # send_email.delay([email], "Bookly: Verify your email", html_message)
+    # Below line will work only when there is redis setup in local or prod systmem
+    send_email.delay([email], "Bookly: Verify your email", msg)
 
     return {
         "message": "Account created! Check email to verify your account",
@@ -280,7 +280,8 @@ async def logout(
     print("Current user: %s" % current_user)
     jti = current_user["jti"]
 
-    # await add_jti_to_blocklist(jti)
+    # Commented because redix serer is not setup
+    await add_jti_to_blocklist(jti)
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,

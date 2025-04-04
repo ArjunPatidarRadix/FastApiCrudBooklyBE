@@ -3,3 +3,5 @@ __pycache__
 .DS_Store 
 .early.coverage
 .env
+.env.prod
+.env.dev

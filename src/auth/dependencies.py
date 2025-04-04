@@ -3,7 +3,7 @@ from fastapi.security import (
     HTTPAuthorizationCredentials,
     OAuth2PasswordBearer,
 )
-from fastapi import Request, status, Depends
+from fastapi import Request, status, Depends, HTTPException
 from .utils import decode_token
 from .service import UserService
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -43,14 +43,14 @@ class AccessTokenBearer:
             raise InvalidToken()
 
         # Commented because redix serer is not setup
-        # if await token_in_blocklist(payload["jti"]):
-        #     raise HTTPException(
-        #         status_code=status.HTTP_403_FORBIDDEN,
-        #         detail={
-        #             "error": "Token has been revoked",
-        #             "resolution": "Please get new token",
-        #         },
-        #     )
+        if await token_in_blocklist(payload["jti"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error": "Token has been revoked",
+                    "resolution": "Please get new token",
+                },
+            )
 
         if payload.get("refresh"):
             raise AccessTokenRequired()
