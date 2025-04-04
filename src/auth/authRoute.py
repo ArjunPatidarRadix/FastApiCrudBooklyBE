@@ -48,21 +48,25 @@ REFRESH_TOKEN_EXPIRY = 2
 
 
 @router.post("/send_mail")
-async def send_mail(emails: EmailModel):
+async def send_mail(
+    emails: EmailModel,
+    background_tasks: BackgroundTasks,
+):
     print("email: %s" % emails)
 
     try:
         emails = emails.addresses
 
         html = "<h1>Welcome to Bookly</h1>"
+        subject = "Welcome to our app"
 
-        msg = create_message(emails, "Bookly: Welcome!", html)
-        mail.send_message(msg)
-
-        # or
-
-        # Below line will work only when there is redis setup in local systmem
-        # send_email.delay(emails, "Bookly: Verify your email", html)
+        try:
+            # Below line will work only when there is redis setup in local systmem
+            send_email.delay(emails, subject, html)
+        except Exception as e:
+            print("Error: %s" % e)
+            msg = create_message(emails, subject, html)
+            background_tasks.add_task(mail.send_message, msg)
 
         return {"message": "Email sent"}
 
@@ -99,12 +103,17 @@ async def create_user_account(
     <p>Click the link below to verify your email</p>
     <a href="{link}">Verify Email</a>
     """
+    subject = "Bookly: Verify your email"
 
-    msg = create_message([email], "Bookly: Verify your email", html_message)
-    # background_tasks.add_task(mail.send_message, msg)
+    try:
+        # Below line will work only when there is redis setup in local or prod systmem
+        send_email.delay([email], subject, html_message)
 
-    # Below line will work only when there is redis setup in local or prod systmem
-    send_email.delay([email], "Bookly: Verify your email", msg)
+    except Exception as e:
+
+        print("Error: %s" % e)
+        msg = create_message([email], subject, html_message)
+        background_tasks.add_task(mail.send_message, msg)
 
     return {
         "message": "Account created! Check email to verify your account",
@@ -299,6 +308,7 @@ async def logout(
 @router.post("/password-reset-request")
 async def password_reset_request(
     email_data: PasswordResetRequestModel,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
 ):
     user = await user_service.get_user_by_email(email_data.email, session)
@@ -307,15 +317,23 @@ async def password_reset_request(
 
     urlSafeToken = create_url_safe_token({"email": email_data.email})
     link = f"http://{Config.DOMAIN}/api/v1/user/password-reset-confirm/{urlSafeToken}"
+
     html_message = f"""
     <h1>Reset your password</h1>
     <p>Click the link below to reset your password</p>
     <a href="{link}">Reset Password</a>
     """
-    msg = create_message(
-        [email_data.email], "Bookly: Reset your password", html_message
-    )
-    await mail.send_message(msg)
+    subject = "Bookly: Reset your password"
+
+    try:
+        # Below line will work only when there is redis setup in local or prod systmem
+        send_email.delay([email_data.email], subject, html_message)
+    except Exception as e:
+        print("Error: %s" % e)
+        msg = create_message([email_data.email], subject, html_message)
+        # await mail.send_message(msg)
+        background_tasks.add_task(mail.send_message, msg)
+
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={

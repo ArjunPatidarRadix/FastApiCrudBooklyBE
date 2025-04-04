@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     ALGORITHM: str
     REDIS_HOST: str = "redis://localhost"
     REDIS_PORT: int = 6379
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
     MAIL_FROM: str
@@ -29,6 +29,13 @@ To access the .env variables, you can use the Config object like this:
 print(Config.DATABASE_URL)
 """
 
+print("Config: %s" % Config.REDIS_URL)
+
+
+# To start the celery server to send the emails in background worked
+# celery -A src.celery_tasks.c_app worker --loglevel=INFO
+# check src/celery_tasks.py for more information
 
 broker_url = Config.REDIS_URL
 result_backend = Config.REDIS_URL
+broker_connection_retry_on_startup = True
